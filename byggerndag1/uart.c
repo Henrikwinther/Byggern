@@ -26,6 +26,7 @@ void USART_Init(unsigned int ubrr)
 	/* 8 data bits, 2 stop bits */
 	UCSR0C = (1 << URSEL0) | (1 << USBS0) | (1 << UCSZ01) | (1 << UCSZ00);
 	
+	/*enables the USART Receive Complete Interrupt*/
 	UCSR0B |= (1 << RXCIE0);
 
 }
@@ -54,8 +55,14 @@ int USART_Receive(void)
 
 ISR(USART0_RXC_vect)
 {
+	
+	int x = 46;
 	unsigned char data;
 
 	data = UDR0;
-	USART_Transmit(data);
+	/*fdevopen(USART_Transmit,USART_Receive);*/
+	
+	printf("x = %d and %c \r \n",x, data);
+	
+	;
 }
