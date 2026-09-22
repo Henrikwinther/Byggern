@@ -12,6 +12,45 @@
 #include "oled.h"
 #include "fonts.h"
 
+static const char *root_items[] = {
+	"Start", "Settings", "Difficulty", "Exit"
+};
+
+static const char *settings_items[] = {
+	"Luminosity", "Setting 2", "Setting 3", "Back"
+};
+
+static const char *difficulty_items[] = {
+	"Easy", "Medium", "Hard", "Back"
+};
+
+static const char *luminosity_items[] = {
+	"Use the joystick", "Back"
+};
+
+const GuiMenu root_menu = {
+	root_items, 4, 0
+};
+
+const GuiMenu settings_menu = {
+	settings_items, 4, &root_menu
+};
+
+const GuiMenu difficulty_menu = {
+	difficulty_items, 4, &root_menu
+};
+
+const GuiMenu luminosity_menu = {
+	luminosity_items, 2, &settings_menu
+};
+
+void oled_init(void)
+{
+	oled_write_command(0xAF);
+	oled_write_command(0xC0);
+	oled_write_command(0xA1);
+	oled_clear();
+}
 
 void oled_write_command (uint8_t command) {
 	
@@ -30,21 +69,6 @@ void oled_write_data (uint8_t data) {
 	
 }
 
-void init_oled(void) {
-	oled_write_command(0xAF);
-
-
-	oled_go_to_column(125);
-	oled_go_to_line(4);
-	oled_write_data(0xFF);
-	
-	oled_clear();
-	
-	
-
-	
-	
-}
 
 
 void oled_go_to_line(uint8_t line) {
@@ -98,11 +122,9 @@ void oled_write_char(char c)
 
 void oled_printf(const char *str) {
 	while (*str){
-		//printf("%c \n", *str);
 		oled_write_char(*str);
 		str++;
 	}
-	
 }
 
 

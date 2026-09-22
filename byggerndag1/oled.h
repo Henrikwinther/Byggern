@@ -10,9 +10,14 @@
 #define OLED_H_
 
 #include <avr/io.h>
+#include "gui.h"
 
-void init_oled(void);
 
+void oled_init(void);
+extern const GuiMenu root_menu;
+extern const GuiMenu settings_menu;
+extern const GuiMenu difficulty_menu;
+extern const GuiMenu luminosity_menu;
 void oled_write_data (uint8_t data);
 void oled_write_command (uint8_t command);
 

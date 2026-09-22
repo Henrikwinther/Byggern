@@ -12,6 +12,7 @@
 #include "adc.h"
 
 #define ADC_BASE_ADDRESS 0x1000
+#define THRESHOLD 50
 
 void init_adc(void){
 
@@ -34,7 +35,6 @@ void init_adc(void){
 
     OCR1A = 0; //fOC1A = F_CPU / 2;   
     
-    // DDRD &= ~(1 << PD4);
 }
 
 uint8_t read_channel(uint8_t channel){
@@ -103,6 +103,27 @@ pos_t pos_read(pos_t joystick_center)
 	pos.y = -100;
 
 	return pos;
+}
+
+
+JoystickDirection joystick_direction(pos_t joystick_center){
+	
+	pos_t pos = pos_read(joystick_center);
+	
+	 if (pos.x > THRESHOLD) {
+		 return RIGHT;
+		 } else if (pos.x < -THRESHOLD) {
+		 return LEFT;
+	 }
+	 
+	
+	 if (pos.y > THRESHOLD) {
+		 return UP;
+		 } else if (pos.y < -THRESHOLD) {
+		 return DOWN;
+	 }
+	 
+	 return NEUTRAL;
 }
 
 
