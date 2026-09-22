@@ -10,14 +10,17 @@
 #define ADC_H_
 
 
-#ifdef F_CPU
-#define F_CPU 4915200UL
-#endif // F_CPU
+typedef struct {
+    int16_t x;
+    int16_t y;
+} pos_t;
 
-// Timer limits for ADC
-#define ADC_CLOCK_MIN 0.5f
-#define ADC_CLOCK_MAX 5.0f
+extern pos_t joystick_center;
 
+void init_adc(void);
+uint8_t read_channel(uint8_t channel);
+pos_t pos_calibrate(void);
+pos_t pos_read(pos_t joystick_center);
 
 
 

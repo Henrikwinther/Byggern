@@ -12,6 +12,10 @@
 
 #include "uart.h"
 #include "sram.h"
+#include "adc.h"
+#include "spi.h"
+#include "oled.h"
+#include "gui.h"
 
 int main(void)
 {
@@ -24,16 +28,34 @@ int main(void)
  	
  	fdevopen(USART_Transmit,USART_Receive);
  	//SRAM_test();
- 	
-
+	 
+	 init_adc();
 	
+ 	pos_t joystick_center = pos_calibrate();
+	 
+	spi_init();
+	 
+	 
+	spi_select(0);
+	spi_write(0x06);
+	spi_write(4);
+	spi_write(10);
+	spi_deselect();
 	
-	volatile uint8_t *adc = (volatile uint8_t *)0x1800; 
+	init_oled();
 	
+	gui_state gui = init_gui();
+	 
     /* Replace with your application code */
     while (1) 
     {
-		 adc[0]= 1;
+		
+		_delay_ms(50);
+
+// 		pos_t pos = pos_read(joystick_center);
+// 		
+// 		printf("X : %d | Y : %d\n\r", pos.x, pos.y);
+		update_gui(&gui);
 
     }
 }
