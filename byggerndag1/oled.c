@@ -12,38 +12,6 @@
 #include "oled.h"
 #include "fonts.h"
 
-static const char *root_items[] = {
-	"Start", "Settings", "Difficulty", "Exit"
-};
-
-static const char *settings_items[] = {
-	"Luminosity", "Setting 2", "Setting 3", "Back"
-};
-
-static const char *difficulty_items[] = {
-	"Easy", "Medium", "Hard", "Back"
-};
-
-static const char *luminosity_items[] = {
-	"Use the joystick", "Back"
-};
-
-const GuiMenu root_menu = {
-	root_items, 4, 0
-};
-
-const GuiMenu settings_menu = {
-	settings_items, 4, &root_menu
-};
-
-const GuiMenu difficulty_menu = {
-	difficulty_items, 4, &root_menu
-};
-
-const GuiMenu luminosity_menu = {
-	luminosity_items, 2, &settings_menu
-};
-
 void oled_init(void)
 {
 	oled_write_command(0xAF);

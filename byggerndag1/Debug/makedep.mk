@@ -4,9 +4,13 @@
 
 adc.c
 
+can.c
+
 gui.c
 
 main.c
+
+mcp2515.c
 
 oled.c
 

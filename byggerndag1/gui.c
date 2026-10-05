@@ -3,7 +3,40 @@
 #include "gui.h"
 #define F_CPU 4915200UL
 #include <avr/io.h>
+#include <stdio.h>
 #include <util/delay.h>
+
+static const char *root_items[] = {
+	"Start", "Settings", "Difficulty", "Exit"
+};
+
+static const char *settings_items[] = {
+	"Luminosity", "Setting 2", "Setting 3", "Back"
+};
+
+static const char *difficulty_items[] = {
+	"Easy", "Medium", "Hard", "Back"
+};
+
+static const char *luminosity_items[] = {
+	"Use the joystick", "Back"
+};
+
+const GuiMenu root_menu = {
+	root_items, 4, 0
+};
+
+const GuiMenu settings_menu = {
+	settings_items, 4, &root_menu
+};
+
+const GuiMenu difficulty_menu = {
+	difficulty_items, 4, &root_menu
+};
+
+const GuiMenu luminosity_menu = {
+	luminosity_items, 2, &settings_menu
+};
 
 static void draw_menu(const gui_state *gui)
 {
@@ -38,6 +71,30 @@ void gui_enter_menu(gui_state *gui, const GuiMenu *menu)
 	gui->position = 0;
 	gui->last_direction = NEUTRAL;
 	draw_menu(gui);
+}
+
+void gui_handle_selection(gui_state *gui, int8_t selected)
+{
+	if (gui->menu == &root_menu) {
+		switch (selected) {
+			case 0:
+			printf("Start selected\n\r");
+			break;
+			case 1:
+			gui_enter_menu(gui, &settings_menu);
+			break;
+			case 2:
+			gui_enter_menu(gui, &difficulty_menu);
+			break;
+			case 3:
+			printf("Exit selected\n\r");
+			break;
+		}
+	} else if (gui->menu == &settings_menu && selected == 0) {
+		gui_enter_menu(gui, &luminosity_menu);
+	} else if (gui->menu->parent != 0 && selected == gui->menu->item_count - 1) {
+		gui_enter_menu(gui, gui->menu->parent);
+	}
 }
 
 

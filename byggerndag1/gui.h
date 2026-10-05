@@ -20,6 +20,11 @@ struct GuiMenu {
 	const GuiMenu *parent;
 };
 
+extern const GuiMenu root_menu;
+extern const GuiMenu settings_menu;
+extern const GuiMenu difficulty_menu;
+extern const GuiMenu luminosity_menu;
+
 typedef struct {
 	const GuiMenu *menu;
 	uint8_t position;
@@ -29,6 +34,7 @@ typedef struct {
 
 void gui_init(gui_state *gui, const GuiMenu *menu);
 void gui_enter_menu(gui_state *gui, const GuiMenu *menu);
+void gui_handle_selection(gui_state *gui, int8_t selected);
 int8_t gui_update(gui_state *gui, pos_t joystick_center);
 
 typedef struct {

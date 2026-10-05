@@ -16,30 +16,8 @@
 #include "spi.h"
 #include "oled.h"
 #include "gui.h"
-
-static void handle_selection(gui_state *gui, int8_t selected)
-{
-	if (gui->menu == &root_menu) {
-		switch (selected) {
-			case 0:
-			printf("Start selected\n\r");
-			break;
-			case 1:
-			gui_enter_menu(gui, &settings_menu);
-			break;
-			case 2:
-			gui_enter_menu(gui, &difficulty_menu);
-			break;
-			case 3:
-			printf("Exit selected\n\r");
-			break;
-		}
-		} else if (gui->menu == &settings_menu && selected == 0) {
-		gui_enter_menu(gui, &luminosity_menu);
-		} else if (gui->menu->parent != 0 && selected == gui->menu->item_count - 1) {
-		gui_enter_menu(gui, gui->menu->parent);
-	}
-}
+#include "can.h"
+#include "mcp2515.h"
 
 int main(void)
 {
@@ -60,19 +38,50 @@ int main(void)
 	
 
 	gui_init(&gui, &root_menu);
+	
+ 	can_init();
+	
+	
+	
+	can_message_t can_msg;
+	can_msg.id = 123;
+	can_msg.length = 4;
+	can_msg.data[0] = 0xAA;
+	can_msg.data[1] = 0xBB;
+	can_msg.data[2] = 0x77;
+	can_msg.data[3] = 0x22;
+	
 
 	while (1) {
-		int8_t selected;
+		
+		
+		can_send_message(&can_msg);
+		
+		/*_delay_ms(10);*/
+		
+		can_message_t msg_received = {0};
+		if (mcp2515_rx_status() & 0x40)
+		{
+			msg_received = can_receive_message();
+			printf(" message data2 received: %x \n \r", (msg_received.data[2]));
+			printf(" message data3 received: %x \n \r", (msg_received.data[3]));
+		
+		}
+		else {
+			printf(" no can message \n \r");
+		}
 
-		_delay_ms(50);
+
+		int8_t selected;
 
 		selected = gui_update(&gui, joystick_center);
 		if (selected < 0) {
 			continue;
 		}
 
-		handle_selection(&gui, selected);
-	}
+		gui_handle_selection(&gui, selected);
+		
+ 	}
 
 }
 

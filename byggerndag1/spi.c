@@ -10,21 +10,17 @@
 #include <util/delay.h>
 #include "spi.h"
 
-typedef struct {
-	volatile uint8_t *port;
-	volatile uint8_t *ddr;
-	uint8_t bit;
-} cs_pin_t;
-
-
-
 void spi_init(void)
 {
-	// set SCK, MOSI and SS as output
-	DDRB |= (1 << PB7) | (1 << PB5) | (1 << PB4) | (1 << PB3)  | (1 << PB1)  ;
 	
+	// set SCK, MOSI and SS as output
+	DDRB |= (1 << PB7) | (1 << PB5) | (1 << PB4) | (1 << PB3)  | (1 << PB1);
+	
+	// set SS to 1
+	PORTB |= (1 << PB4) | (1 << PB3)  | (1 << PB1);
+
 	//set MISO as input
-	DDRB &= ~(1 << PD6);
+	DDRB &= ~(1 << PB6);
 	
 	// display d/c as output
 	DDRB |= (1 << PB2);
@@ -37,11 +33,15 @@ void spi_init(void)
 void spi_select(spi_slave_t slave){
 	
 	if (slave == 0) {
-		PORTB &= ~(1 << PD4);
+		PORTB &= ~(1 << PB4);
 	}
 	
 	if (slave == 1) {
-		PORTB &= ~(1 << PD3);
+		PORTB &= ~(1 << PB3);
+	}
+
+	if (slave == 2) {
+		PORTB &= ~(1 << PB1);
 	}
 }
 
@@ -49,20 +49,23 @@ void spi_select(spi_slave_t slave){
 void spi_deselect(void) {
 	PORTB |= (1 << PB4);
 	PORTB |= (1 << PB3);
+	PORTB |= (1 << PB1);
 }
 
-void spi_write(char cData)
+void spi_write(uint8_t data)
 {
 	/* Start transmission */
-	SPDR = cData;
+	SPDR = data;
 	/* Wait for transmission complete */
 	while(!(SPSR & (1<<SPIF)))
 	;
+
+	(void)SPDR;
 }
 
 uint8_t spi_read(void) {
 	
-	SPDR = 0xFF; // send dummy data
+	SPDR = 0x77; // send dummy data
 	
 	/* Wait for transmission complete */
 	while(!(SPSR & (1<<SPIF)))
