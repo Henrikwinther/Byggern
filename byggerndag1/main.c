@@ -41,8 +41,6 @@ int main(void)
 	
  	can_init();
 	
-	
-	
 	can_message_t can_msg;
 	can_msg.id = 123;
 	can_msg.length = 4;
@@ -55,22 +53,25 @@ int main(void)
 	while (1) {
 		
 		
-		can_send_message(&can_msg);
-		
-		/*_delay_ms(10);*/
-		
-		can_message_t msg_received = {0};
-		if (mcp2515_rx_status() & 0x40)
-		{
-			msg_received = can_receive_message();
-			printf(" message data2 received: %x \n \r", (msg_received.data[2]));
-			printf(" message data3 received: %x \n \r", (msg_received.data[3]));
-		
-		}
-		else {
-			printf(" no can message \n \r");
-		}
+ 		/*can_send_message(&can_msg);*/
+		 can_send_joystick_position(joystick_center);
+// 		
+ 		_delay_ms(10);
+// 		
+// 		can_message_t msg_received = {0};
+// 		if (mcp2515_rx_status() & 0x40)
+// 		{
+// 			msg_received = can_receive_message();
+			printf(" message sent: %x \n \r", (can_msg.data[2]));
+// 			printf(" message data3 received: %x \n \r", (msg_received.data[3]));
+// 		
+// 		}
+// 		else {
+// 			printf(" no can message \n \r");
+// 		}
 
+	 
+	 
 
 		int8_t selected;
 
@@ -84,4 +85,3 @@ int main(void)
  	}
 
 }
-

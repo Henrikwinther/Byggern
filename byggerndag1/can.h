@@ -9,6 +9,7 @@
 #define CAN_H_
 
 #include <stdint.h>
+#include "adc.h"
 
 typedef struct {
     uint16_t id;
@@ -19,5 +20,6 @@ typedef struct {
 void can_init(void);
 void can_send_message(can_message_t *msg);
 can_message_t can_receive_message(void);
+void can_send_joystick_position(pos_t joystick_center);
 
 #endif /* CAN_H_ */

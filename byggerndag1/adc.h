@@ -9,6 +9,8 @@
 #ifndef ADC_H_
 #define ADC_H_
 
+#include <stdint.h>
+
 
 typedef struct {
     int16_t x;
@@ -22,8 +24,6 @@ typedef enum {
 	DOWN,
 	NEUTRAL 
 	}JoystickDirection;
-
-extern pos_t joystick_center;
 
 void init_adc(void);
 uint8_t read_channel(uint8_t channel);

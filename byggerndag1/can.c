@@ -13,13 +13,20 @@
 #include "can.h"
 #include "mcp2515.h"
 #include "spi.h"
+#include "adc.h"
 
 void can_init(void)
 {
     mcp2515_reset();
-	_delay_ms(100);
-
-     mcp2515_write(0x0F, 0x40); // Set CANCTRL to 01000000 ie loopback mode
+	_delay_ms(10);
+	
+	mcp2515_write(0x28, 0x03);  // set cnf3 to 00000011 (ps2 = 4tq)
+	
+	mcp2515_write(0x29, 0xAC); // set cnf2 to 10101100 (prseg = 5tq, phseg1 = 6tq, blt = 1)
+	
+	mcp2515_write(0x2A, 0x01);  // brp = 1 and sjw = 1
+	
+    mcp2515_write(0x0F, 0x00); // Set CANCTRL to normal mode
 		
 }
 
@@ -63,4 +70,17 @@ can_message_t can_receive_message(void)
 		
         return received_message;
     
+}
+
+void can_send_joystick_position(pos_t joystick_center) {
+	can_message_t msg;
+
+	msg.id = 100;
+	msg.length = 2;
+
+	pos_t joystick_pos = pos_read(joystick_center);
+	msg.data[0] = (uint8_t)joystick_pos.x;
+	msg.data[1] = (uint8_t)joystick_pos.y;
+
+	can_send_message(&msg);
 }
