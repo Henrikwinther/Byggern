@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+
 volatile uint8_t score = 0;
 
 void init_adc(void)
@@ -20,7 +21,7 @@ void init_adc(void)
                 | ADC_MR_TRANSFER(2)
                 | ADC_MR_FREERUN_ON;      // continous conversion
 
-    // activate channem
+    // activate channel
     ADC->ADC_CHER = 1 << 0;
 }
 
@@ -34,19 +35,37 @@ void set_score(void)
 {
     uint32_t sum = 0;
 
-    for (uint8_t i = 0; i < 8; i++) {
+    for (uint8_t i = 0; i < 6; i++) {
         sum += adc_read();
+		
     }
-
-    uint16_t avg = (uint16_t)(sum / 8);
+	
+    uint16_t avg = (uint16_t)(sum / 6);
 
     bool blocked = avg > 2000;
 
-    static bool was_blocked = false;
+    static bool candidate_blocked = false;
+    static bool stable_blocked = false;
+    static bool initialized = false;
+    static uint8_t candidate_count = 0;
 
-    if (blocked && !was_blocked){
-        score++;
+    if (blocked != candidate_blocked) {
+	    candidate_blocked = blocked;
+	    candidate_count = 1;
+	    } else if (candidate_count < 2) {
+	    candidate_count++;
     }
 
-    was_blocked = blocked;
+    if (candidate_count >= 2) {
+	    if (!initialized) {
+		    stable_blocked = candidate_blocked;  
+		    initialized = true;
+		    } else if (candidate_blocked != stable_blocked) {
+		    stable_blocked = candidate_blocked;
+
+		    if (stable_blocked) {
+			    score++;
+		    }
+	    }
+    }
 }

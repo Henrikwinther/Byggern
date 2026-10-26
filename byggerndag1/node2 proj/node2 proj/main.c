@@ -14,6 +14,8 @@
 #include "uart.h"
 #include "sam.h"
 #include "can.h"
+#include "timer.h"
+#include "adc.h"
 
 int main()
 {
@@ -23,8 +25,16 @@ int main()
 
     //Uncomment after including uart above
     uart_init(SystemCoreClock, 9600);
-    printf("Hello World\r\n");
+	
+	init_adc();
+	
+	init_pwm();
+	start_pwm();
+	init_interrupt();
+	
 
+    printf("Hello World\r\n");
+	
     PIOB->PIO_PER = PIO_PB13; //Enable PB13 as GPIO
 
     PIOB->PIO_OER = PIO_PB13; //Enable PB13 as output
@@ -32,26 +42,17 @@ int main()
     can_init(0);
 
 	CanMsg msg;
-
+	
+	uint8_t previous_score = 0;
+	
+	printf("Score : %u\r\n", (unsigned int)previous_score);
+	
     while (1)
     {
-//         PIOB->PIO_CODR = PIO_PB13; //Set PB13 low
-//         for (int i = 0; i < 1000000; i++)
-//         {
-//             //Do nothing
-//         }
-// 
-//         PIOB->PIO_SODR = PIO_PB13; //Set PB13 high
-//         for (int i = 0; i < 1000000; i++)
-//         {
-//             //Do nothing
-//         }
-		
-		
-        if (can_rx(&msg)) {
-            can_printmsg(msg);
+        if (score != previous_score) {
+	        previous_score = score;
+	        printf("Score : %u\r\n", (unsigned int)previous_score);
         }
-        
     }
     
 }

@@ -81,6 +81,9 @@ void can_send_joystick_position(pos_t joystick_center) {
 	pos_t joystick_pos = pos_read(joystick_center);
 	msg.data[0] = (uint8_t)joystick_pos.x;
 	msg.data[1] = (uint8_t)joystick_pos.y;
+	
+	printf("x : %d \r \n",(int8_t) msg.data[0]);
+	printf("y : %d \r \n",(int8_t) msg.data[1]);
 
 	can_send_message(&msg);
 }

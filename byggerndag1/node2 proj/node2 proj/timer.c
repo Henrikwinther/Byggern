@@ -10,6 +10,7 @@
 #include "servo.h"
 #include "adc.h"
 #include <stdint.h>
+#include <stdio.h>
 
 #define SERVO_MIN_US      900u
 #define SERVO_MAX_US     2100u
@@ -72,10 +73,12 @@ void init_interrupt(void){
 
 void TC1_Handler(void)
 {
+	set_score();
+	
 	CanMsg msg;
 	(void)TC0->TC_CHANNEL[1].TC_SR;
 	if (can_rx(&msg)) {
-		servo_set(msg.byte[0]);
-		can_printmsg(msg);
+		printf("x : %d \r \n",(int8_t) msg.byte[0]);
+		servo_set((int8_t)msg.byte[0]);
 	}
 }

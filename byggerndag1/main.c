@@ -62,7 +62,7 @@ int main(void)
 // 		if (mcp2515_rx_status() & 0x40)
 // 		{
 // 			msg_received = can_receive_message();
-			printf(" message sent: %x \n \r", (can_msg.data[2]));
+		//	printf(" message sent: %x \n \r", (can_msg.data[2]));
 // 			printf(" message data3 received: %x \n \r", (msg_received.data[3]));
 // 		
 // 		}

@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-extern volatile uint8_t score = 0;
+extern volatile uint8_t score;
 
 void init_adc(void);
 uint16_t adc_read(void);
