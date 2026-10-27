@@ -79,6 +79,24 @@ void can_send_joystick_position(pos_t joystick_center) {
 	msg.length = 2;
 
 	pos_t joystick_pos = pos_read(joystick_center);
+	
+	// protect noisy values
+	if (joystick_pos.x >= -3 && joystick_pos.x <= 3) {
+		joystick_pos.x = 0;
+	}
+
+	if (joystick_pos.y >= -3 && joystick_pos.y <= 3) {
+		joystick_pos.y = 0;
+	}
+	
+	if (joystick_pos.x >= 97) {
+		joystick_pos.x = 100;
+	}
+
+	if (joystick_pos.x <= -97 ) {
+		joystick_pos.x = -100;
+	}
+	
 	msg.data[0] = (uint8_t)joystick_pos.x;
 	msg.data[1] = (uint8_t)joystick_pos.y;
 	

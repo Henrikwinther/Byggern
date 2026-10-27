@@ -35,12 +35,12 @@ void set_score(void)
 {
     uint32_t sum = 0;
 
-    for (uint8_t i = 0; i < 6; i++) {
+    for (uint8_t i = 0; i < 8; i++) {
         sum += adc_read();
 		
     }
 	
-    uint16_t avg = (uint16_t)(sum / 6);
+    uint16_t avg = (uint16_t)(sum / 8);
 
     bool blocked = avg > 2000;
 
@@ -52,11 +52,11 @@ void set_score(void)
     if (blocked != candidate_blocked) {
 	    candidate_blocked = blocked;
 	    candidate_count = 1;
-	    } else if (candidate_count < 2) {
+	    } else if (candidate_count < 3) {
 	    candidate_count++;
     }
 
-    if (candidate_count >= 2) {
+    if (candidate_count >= 3) {
 	    if (!initialized) {
 		    stable_blocked = candidate_blocked;  
 		    initialized = true;

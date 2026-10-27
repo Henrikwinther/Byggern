@@ -13,7 +13,6 @@
 void servo_set(int8_t command)
 {
 	int32_t pulse = SERVO_CENTER_US + (int32_t)command * 6;
-
 	set_pwm_pulse((uint32_t)pulse);
 }
 

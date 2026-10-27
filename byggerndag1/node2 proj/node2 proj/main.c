@@ -28,17 +28,19 @@ int main()
 	
 	init_adc();
 	
+    PIOB->PIO_PER = PIO_PB13; //Enable PB13 as GPIO
+
+    PIOB->PIO_OER = PIO_PB13; //Enable PB13 as output
+
 	init_pwm();
 	start_pwm();
+    
 	init_interrupt();
 	
 
     printf("Hello World\r\n");
 	
-    PIOB->PIO_PER = PIO_PB13; //Enable PB13 as GPIO
-
-    PIOB->PIO_OER = PIO_PB13; //Enable PB13 as output
-
+  
     can_init(0);
 
 	CanMsg msg;
