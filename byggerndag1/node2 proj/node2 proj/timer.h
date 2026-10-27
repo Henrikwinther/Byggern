@@ -2,7 +2,6 @@
 
 #include <stdint.h>
 
-void init_pwm(void);
-void start_pwm(void);
-void set_pwm_pulse(uint32_t pulse_us);
+void init_encoder(void);
+int32_t encoder_position(void);
 void init_interrupt(void);

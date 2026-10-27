@@ -164,6 +164,18 @@
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="motor.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="motor.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="pwm.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="pwm.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="servo.c">
       <SubType>compile</SubType>
     </Compile>

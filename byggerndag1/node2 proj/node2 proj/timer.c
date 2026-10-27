@@ -1,5 +1,5 @@
 /*
- * pwm.c
+ * timer.c
  *
  * Created: 13.10.2026
  * Author: alexanmf
@@ -7,98 +7,80 @@
 
 #include "sam.h"
 #include "can.h"
+#include "motor.h"
 #include "servo.h"
 #include "adc.h"
 #include <stdint.h>
-#include <stdio.h>
 
-#define SERVO_MIN_US      900u
-#define SERVO_MAX_US     2099u
-#define PWM_PERIOD_TICKS 52500u
+#define ENCODER_PINS  PIO_PC25 | PIO_PC26
 
-static uint32_t us_to_ticks(uint32_t us)
+void init_encoder(void)
 {
-	return (us * 2625u) / 1000u;
+	// Enable PIOC and TC2 channel 0 (peripheral ID_TC6) clocks.
+	PMC->PMC_PCER0 |= (1u << ID_PIOC);
+	PMC->PMC_PCER1 |= (1u << (ID_TC6 - 32));
+
+	// PC25 = TIOA6 and PC26 = TIOB6, both on peripheral B.
+	PIOC->PIO_ABSR |= ENCODER_PINS;
+	PIOC->PIO_PDR |= ENCODER_PINS;
+
+	// Quadrature decoder is configured for the whole TC2 block.
+	TC2->TC_BMR = TC_BMR_QDEN | TC_BMR_POSEN;
+
+	// The position counter on channel 0 must use XC0 in quadrature mode.
+	TC2->TC_CHANNEL[0].TC_CMR = TC_CMR_TCCLKS_XC0;
+	TC2->TC_CHANNEL[0].TC_CCR = TC_CCR_CLKEN | TC_CCR_SWTRG;
 }
 
-void init_pwm(void)
+int32_t encoder_position(void)
 {
-	// Enable PIOB and PWM clocks.
-	PMC->PMC_PCER0 = (1u << ID_PIOB);
-	PMC->PMC_PCER1 = (1u << (ID_PWM - 32));
-
-	// PB13 -> Peripheral B (PWMH1).
-	PIOB->PIO_ABSR |= PIO_ABSR_P13;
-	PIOB->PIO_PDR = PIO_PDR_P13;
-
-	// MCK/32 = 2.625 MHz; polarity to 1 makes CDTY the high pulse width.
-	PWM->PWM_CH_NUM[1].PWM_CMR = (5u << 0) | PWM_CMR_CPOL;
-	PWM->PWM_CH_NUM[1].PWM_CPRD = PWM_PERIOD_TICKS;
-	PWM->PWM_CH_NUM[1].PWM_CDTY = us_to_ticks(1500u);
+	return (int32_t)TC2->TC_CHANNEL[0].TC_CV;
 }
 
-void start_pwm(void)
+void init_interrupt(void)
 {
-	PWM->PWM_ENA = PWM_ENA_CHID1;
-}
+	// Activate clocks for TC3 and TC4.
+	PMC->PMC_PCER0 |= (1u << ID_TC3) | (1u << ID_TC4);
 
-void set_pwm_pulse(uint32_t pulse_us)
-{
-	if (pulse_us < SERVO_MIN_US) pulse_us = SERVO_MIN_US;
-	if (pulse_us > SERVO_MAX_US) pulse_us = SERVO_MAX_US;
-
-	PWM->PWM_CH_NUM[1].PWM_CDTYUPD = us_to_ticks(pulse_us);
-}
-
-void init_interrupt(void){
-	
-	PMC->PMC_PCER0 |= (1u << ID_TC1) | (1u << ID_TC2);
-	
-	TC0->TC_CHANNEL[1].TC_CMR =
+	// TC3 (TC1 channel 0): ~10 ms.
+	TC1->TC_CHANNEL[0].TC_CMR =
 	(2u << 0)  |  // TCCLKS = MCK/32
 	(2u << 13) |  // WAVSEL = UP_RC
-	(1u << 15);   // WAVE = 1 (waveform mode)
-	
-	TC0->TC_CHANNEL[2].TC_CMR =
+	(1u << 15);   // WAVE = 1
+
+	TC1->TC_CHANNEL[0].TC_RC = 26250;
+	TC1->TC_CHANNEL[0].TC_IER = TC_IER_CPCS;
+
+	// TC4 (TC1 channel 1): ~4 ms.
+	TC1->TC_CHANNEL[1].TC_CMR =
 	(2u << 0)  |  // TCCLKS = MCK/32
 	(2u << 13) |  // WAVSEL = UP_RC
-	(1u << 15);   // WAVE = 1 (waveform mode)
-	
-	TC0->TC_CHANNEL[1].TC_RC = 26250;  // Approximately 10 ms period    
-	TC0->TC_CHANNEL[1].TC_IER = TC_IER_CPCS;
-	
-	TC0->TC_CHANNEL[2].TC_RC = 10025;  // Approximately 4 ms period
-	TC0->TC_CHANNEL[2].TC_IER = TC_IER_CPCS;
-	
-	NVIC_EnableIRQ(TC1_IRQn);
-	NVIC_EnableIRQ(TC2_IRQn);
-	
-	//Start the Timer Counter
-	TC0->TC_CHANNEL[1].TC_CCR =
-	TC_CCR_CLKEN | TC_CCR_SWTRG;
-	
-	TC0->TC_CHANNEL[2].TC_CCR =
-	TC_CCR_CLKEN | TC_CCR_SWTRG;
+	(1u << 15);   // WAVE = 1
+
+	TC1->TC_CHANNEL[1].TC_RC = 10025;
+	TC1->TC_CHANNEL[1].TC_IER = TC_IER_CPCS;
+
+	NVIC_EnableIRQ(TC3_IRQn);
+	NVIC_EnableIRQ(TC4_IRQn);
+
+	// Start timers.
+	TC1->TC_CHANNEL[0].TC_CCR = TC_CCR_CLKEN | TC_CCR_SWTRG;
+	TC1->TC_CHANNEL[1].TC_CCR = TC_CCR_CLKEN | TC_CCR_SWTRG;
 }
 
-
-
-void TC1_Handler(void)
+void TC3_Handler(void)
 {
 	CanMsg msg;
-	(void)TC0->TC_CHANNEL[1].TC_SR;
-	if (can_rx(&msg) 
-// 	&& !((int8_t)msg.byte[0] >= -5 &&
-// 	(int8_t)msg.byte[0] <= 5)
-	 ){
-		//printf("x : %d \r \n",(int8_t) msg.byte[0]);
-		servo_set((int8_t)msg.byte[0]);
+	(void)TC1->TC_CHANNEL[0].TC_SR;
+
+	if (can_rx(&msg)) {
+		motor_set((int8_t)msg.byte[0]);
+		servo_set((int8_t)msg.byte[1]);
 	}
 }
 
-void TC2_Handler(void)
+void TC4_Handler(void)
 {
-	(void)TC0->TC_CHANNEL[2].TC_SR;
+	(void)TC1->TC_CHANNEL[1].TC_SR;
 	set_score();
-	//printf("helo");
 }

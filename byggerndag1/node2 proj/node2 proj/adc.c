@@ -36,8 +36,7 @@ void set_score(void)
     uint32_t sum = 0;
 
     for (uint8_t i = 0; i < 8; i++) {
-        sum += adc_read();
-		
+        sum += adc_read();	
     }
 	
     uint16_t avg = (uint16_t)(sum / 8);

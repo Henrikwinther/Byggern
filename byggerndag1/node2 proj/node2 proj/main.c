@@ -14,6 +14,8 @@
 #include "uart.h"
 #include "sam.h"
 #include "can.h"
+#include "motor.h"
+#include "pwm.h"
 #include "timer.h"
 #include "adc.h"
 
@@ -34,23 +36,31 @@ int main()
 
 	init_pwm();
 	start_pwm();
+	motor_init();
     
 	init_interrupt();
+	init_encoder();
 	
 
     printf("Hello World\r\n");
 	
   
     can_init(0);
-
-	CanMsg msg;
 	
 	uint8_t previous_score = 0;
+	int32_t previous_encoder_position = encoder_position();
 	
 	printf("Score : %u\r\n", (unsigned int)previous_score);
+	printf("Encoder position : %ld\r\n", (long)previous_encoder_position);
 	
     while (1)
     {
+		int32_t position = encoder_position();
+		if (position != previous_encoder_position) {
+			previous_encoder_position = position;
+			printf("Encoder position : %ld\r\n", (long)position);
+		}
+
         if (score != previous_score) {
 	        previous_score = score;
 	        printf("Score : %u\r\n", (unsigned int)previous_score);

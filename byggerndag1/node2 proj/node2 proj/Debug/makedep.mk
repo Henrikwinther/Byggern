@@ -12,6 +12,10 @@ Device_Startup\system_sam3xa.c
 
 main.c
 
+motor.c
+
+pwm.c
+
 servo.c
 
 time.c
