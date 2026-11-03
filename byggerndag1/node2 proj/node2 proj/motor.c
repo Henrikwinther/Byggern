@@ -1,8 +1,46 @@
 #include "sam.h"
 #include "motor.h"
+#include "timer.h"
 
 #define MOTOR_PWM_PERIOD_TICKS 131u
 #define MOTOR_PHASE_PIN        PIO_PC23
+#define MOTOR_COMMAND_LIMIT    100
+#define MOTOR_TARGET_STEP_Q8   10000
+#define MOTOR_POSITION_LIMIT   1300
+#define MOTOR_ERROR_LIMIT      10000
+#define MOTOR_INTEGRAL_LIMIT   10000
+#define MOTOR_COMMAND_TIMEOUT  100u
+
+static int8_t joystick_command;
+static int64_t target_position_q8;
+static int32_t integral_error;
+static uint8_t command_age;
+static uint8_t controller_initialized;
+
+static int32_t clamp(int32_t value, int32_t minimum, int32_t maximum)
+{
+	if (value < minimum) return minimum;
+	if (value > maximum) return maximum;
+	return value;
+}
+
+static void motor_apply(int8_t command)
+{
+	int16_t signed_command = command;
+	uint32_t magnitude;
+
+	if (signed_command < 0) {
+		PIOC->PIO_SODR = MOTOR_PHASE_PIN;
+		magnitude = (uint32_t)(-signed_command);
+	} else {
+		PIOC->PIO_CODR = MOTOR_PHASE_PIN;
+		magnitude = (uint32_t)signed_command;
+	}
+
+	PWM->PWM_CH_NUM[0].PWM_CDTYUPD =
+		(magnitude * MOTOR_PWM_PERIOD_TICKS * 50u + (100u * 100u) / 2u) /
+		(100u * 100u);
+}
 
 void motor_init(void)
 {
@@ -24,21 +62,87 @@ void motor_init(void)
 	PWM->PWM_CH_NUM[0].PWM_CPRD = MOTOR_PWM_PERIOD_TICKS;
 	PWM->PWM_CH_NUM[0].PWM_CDTY = 0u;
 	PWM->PWM_ENA = PWM_ENA_CHID0;
+
+	joystick_command = 0;
+	target_position_q8 = 0;
+	integral_error = 0;
+	command_age = MOTOR_COMMAND_TIMEOUT;
+	controller_initialized = 0;
 }
 
 void motor_set(int8_t command)
 {
-	int16_t signed_command = command;
-	uint32_t magnitude;
-
-	if (signed_command < 0) {
-		PIOC->PIO_SODR = MOTOR_PHASE_PIN;
-		magnitude = (uint32_t)(-signed_command);
-	} else {
-		PIOC->PIO_CODR = MOTOR_PHASE_PIN;
-		magnitude = (uint32_t)signed_command;
+	if (command > -8 && command < 8) {
+		command = 0;
 	}
 
-	PWM->PWM_CH_NUM[0].PWM_CDTYUPD =
-		(magnitude * MOTOR_PWM_PERIOD_TICKS * 50u ) / (128u * 100u);
+	joystick_command = (int8_t)clamp(command, -MOTOR_COMMAND_LIMIT, MOTOR_COMMAND_LIMIT);
+	command_age = 0;
+}
+
+void motor_update(void)
+{
+	int32_t position = encoder_position();
+	int64_t position_q8 = (int64_t)position * 256;
+	int64_t target_limit_q8 = (int64_t)MOTOR_POSITION_LIMIT * 256;
+	int64_t error_q8;
+	int64_t requested_target_q8;
+	int32_t error;
+	int32_t candidate_integral;
+	int32_t output;
+
+	if (!controller_initialized) {
+		if (position_q8 > target_limit_q8) {
+			target_position_q8 = target_limit_q8;
+		} else if (position_q8 < -target_limit_q8) {
+			target_position_q8 = -target_limit_q8;
+		} else {
+			target_position_q8 = position_q8;
+		}
+		controller_initialized = 1;
+	}
+
+	if (command_age < MOTOR_COMMAND_TIMEOUT) {
+		command_age++;
+	} else {
+		joystick_command = 0;
+	}
+
+	// Scale target motion for the 2 ms control period; full input moves
+	// about 2.5 encoder counts per update.
+	requested_target_q8 = target_position_q8 +
+		(int32_t)joystick_command * MOTOR_TARGET_STEP_Q8 / 1250;
+	if (requested_target_q8 > target_limit_q8) {
+		target_position_q8 = target_limit_q8;
+		integral_error = 0;
+	} else if (requested_target_q8 < -target_limit_q8) {
+		target_position_q8 = -target_limit_q8;
+		integral_error = 0;
+	} else {
+		target_position_q8 = requested_target_q8;
+	}
+
+	error_q8 = target_position_q8 - position_q8;
+	if (error_q8 > (int64_t)MOTOR_ERROR_LIMIT * 256) {
+		error = MOTOR_ERROR_LIMIT;
+	} else if (error_q8 < -(int64_t)MOTOR_ERROR_LIMIT * 256) {
+		error = -MOTOR_ERROR_LIMIT;
+	} else {
+		error = (int32_t)(error_q8 / 256);
+	}
+
+	// Keep the integral contribution independent of the 2 ms sample interval.
+	candidate_integral = clamp(integral_error + error,
+		-MOTOR_INTEGRAL_LIMIT, MOTOR_INTEGRAL_LIMIT);
+	output = 2 * error + candidate_integral / 500;
+	if ((output <= MOTOR_COMMAND_LIMIT && output >= -MOTOR_COMMAND_LIMIT) ||
+		(output > MOTOR_COMMAND_LIMIT && error < 0) ||
+		(output < -MOTOR_COMMAND_LIMIT && error > 0)) {
+		integral_error = candidate_integral;
+	}
+
+	output = 2 * error + integral_error / 500;
+	output = clamp(output, -MOTOR_COMMAND_LIMIT, MOTOR_COMMAND_LIMIT);
+	// The observed motor/encoder polarity is opposite to the controller sign.
+	motor_apply((int8_t)output);
 }

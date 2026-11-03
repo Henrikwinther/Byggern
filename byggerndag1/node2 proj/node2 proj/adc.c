@@ -54,12 +54,11 @@ void set_score(void)
 	    } else if (candidate_count < 3) {
 	    candidate_count++;
     }
-
     if (candidate_count >= 3) {
 	    if (!initialized) {
-		    stable_blocked = candidate_blocked;  
+		    stable_blocked = candidate_blocked;
 		    initialized = true;
-		    } else if (candidate_blocked != stable_blocked) {
+	    } else if (candidate_blocked != stable_blocked) {
 		    stable_blocked = candidate_blocked;
 
 		    if (stable_blocked) {

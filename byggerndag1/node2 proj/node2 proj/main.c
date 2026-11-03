@@ -37,34 +37,36 @@ int main()
 	init_pwm();
 	start_pwm();
 	motor_init();
-    
-	init_interrupt();
 	init_encoder();
+	can_init(0);
+	init_interrupt();
 	
 
     printf("Hello World\r\n");
 	
-  
-    can_init(0);
-	
 	uint8_t previous_score = 0;
 	int32_t previous_encoder_position = encoder_position();
 	
-	printf("Score : %u\r\n", (unsigned int)previous_score);
-	printf("Encoder position : %ld\r\n", (long)previous_encoder_position);
+	uint8_t ignore_first_score = 1;
 	
     while (1)
     {
-		int32_t position = encoder_position();
-		if (position != previous_encoder_position) {
-			previous_encoder_position = position;
-			printf("Encoder position : %ld\r\n", (long)position);
-		}
+// 		int32_t position = encoder_position();
+// 		if (position != previous_encoder_position) {
+// 			previous_encoder_position = position;
+// 			printf("Encoder position : %ld\r\n", (long)position);
+// 		}
 
         if (score != previous_score) {
-	        previous_score = score;
-	        printf("Score : %u\r\n", (unsigned int)previous_score);
-        }
+			if (ignore_first_score) {
+				score = 0;
+				previous_score = 0;
+				ignore_first_score = 0;
+			} else {
+				previous_score = score;
+				printf("Score : %u\r\n", (unsigned int)previous_score);
+			}
+		}
     }
     
 }

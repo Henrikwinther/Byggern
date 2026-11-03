@@ -14,6 +14,8 @@
 #include "mcp2515.h"
 #include "spi.h"
 #include "adc.h"
+#include "gui.h"
+
 
 void can_init(void)
 {
@@ -73,10 +75,11 @@ can_message_t can_receive_message(void)
 }
 
 void can_send_joystick_position(pos_t joystick_center) {
+	
 	can_message_t msg;
 
 	msg.id = 100;
-	msg.length = 2;
+	msg.length = 4;
 
 	pos_t joystick_pos = pos_read(joystick_center);
 	
@@ -97,11 +100,18 @@ void can_send_joystick_position(pos_t joystick_center) {
 		joystick_pos.x = -100;
 	}
 	
+
+	Buttons buttons = buttons_read();
+
+	
+	
 	msg.data[0] = (uint8_t)joystick_pos.x;
 	msg.data[1] = (uint8_t)joystick_pos.y;
+	msg.data[2] = buttons.left;
+	msg.data[3] = buttons.right;
 	
-	printf("x : %d \r \n",(int8_t) msg.data[0]);
-	printf("y : %d \r \n",(int8_t) msg.data[1]);
+// 	printf("x : %d \r \n",(int8_t) msg.data[0]);
+// 	printf("y : %d \r \n",(int8_t) msg.data[1]);
 
 	can_send_message(&msg);
 }

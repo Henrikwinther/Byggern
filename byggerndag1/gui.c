@@ -123,16 +123,7 @@ int8_t gui_update(gui_state *gui, pos_t joystick_center)
 	}
 	gui->button_was_pressed = pressed;
 	
-	Buttons buttons = buttons_read();
 	
-	if(buttons.right !=0){
-		printf("Right buttons : %d\n\r", buttons.right);
-		
-	}
-	if(buttons.left !=0){
-		printf("Left buttons : %d\n\r", buttons.left);
-		
-	}
 	
 	
 
