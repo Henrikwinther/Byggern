@@ -9,7 +9,7 @@
 #define MOTOR_POSITION_LIMIT   1300
 #define MOTOR_ERROR_LIMIT      10000
 #define MOTOR_INTEGRAL_LIMIT   10000
-#define MOTOR_COMMAND_TIMEOUT  100u
+#define MOTOR_COMMAND_TIMEOUT  200u
 
 static int8_t joystick_command;
 static int64_t target_position_q8;
@@ -83,10 +83,10 @@ void motor_set(int8_t command)
 void motor_update(void)
 {
 	int32_t position = encoder_position();
-	int64_t position_q8 = (int64_t)position * 256;
-	int64_t target_limit_q8 = (int64_t)MOTOR_POSITION_LIMIT * 256;
-	int64_t error_q8;
-	int64_t requested_target_q8;
+	int32_t position_q8 = (int64_t)position * 256;
+	int32_t target_limit_q8 = (int64_t)MOTOR_POSITION_LIMIT * 256;
+	int32_t error_q8;
+	int32_t requested_target_q8;
 	int32_t error;
 	int32_t candidate_integral;
 	int32_t output;

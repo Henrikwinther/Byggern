@@ -30,10 +30,12 @@ typedef struct {
 	uint8_t position;
 	JoystickDirection last_direction;
 	uint8_t button_was_pressed;
+	uint16_t score;
 } gui_state;
 
 void gui_init(gui_state *gui, const GuiMenu *menu);
 void gui_enter_menu(gui_state *gui, const GuiMenu *menu);
+void gui_set_score(gui_state *gui, uint16_t score);
 void gui_handle_selection(gui_state *gui, int8_t selected);
 int8_t gui_update(gui_state *gui, pos_t joystick_center);
 
