@@ -6,16 +6,23 @@
 #define MOTOR_PHASE_PIN        PIO_PC23
 #define MOTOR_COMMAND_LIMIT    100
 #define MOTOR_TARGET_STEP_Q8   10000
-#define MOTOR_POSITION_LIMIT   1300
-#define MOTOR_ERROR_LIMIT      10000
+#define MOTOR_POSITION_MIN     (-1352)
+#define MOTOR_POSITION_MAX     1457
+#define MOTOR_ERROR_LIMIT      3000
 #define MOTOR_INTEGRAL_LIMIT   10000
 #define MOTOR_COMMAND_TIMEOUT  200u
+
+typedef enum {
+	MOTOR_MODE_INCREMENTAL,
+	MOTOR_MODE_DIRECT
+} motor_mode_t;
+
+#define MOTOR_CONTROL_MODE MOTOR_MODE_DIRECT
 
 static int8_t joystick_command;
 static int64_t target_position_q8;
 static int32_t integral_error;
 static uint8_t command_age;
-static uint8_t controller_initialized;
 
 static int32_t clamp(int32_t value, int32_t minimum, int32_t maximum)
 {
@@ -67,7 +74,6 @@ void motor_init(void)
 	target_position_q8 = 0;
 	integral_error = 0;
 	command_age = MOTOR_COMMAND_TIMEOUT;
-	controller_initialized = 0;
 }
 
 void motor_set(int8_t command)
@@ -84,23 +90,13 @@ void motor_update(void)
 {
 	int32_t position = encoder_position();
 	int32_t position_q8 = (int64_t)position * 256;
-	int32_t target_limit_q8 = (int64_t)MOTOR_POSITION_LIMIT * 256;
+	int32_t target_min_q8 = (int64_t)MOTOR_POSITION_MIN * 256;
+	int32_t target_max_q8 = (int64_t)MOTOR_POSITION_MAX * 256;
 	int32_t error_q8;
-	int32_t requested_target_q8;
 	int32_t error;
 	int32_t candidate_integral;
 	int32_t output;
-
-	if (!controller_initialized) {
-		if (position_q8 > target_limit_q8) {
-			target_position_q8 = target_limit_q8;
-		} else if (position_q8 < -target_limit_q8) {
-			target_position_q8 = -target_limit_q8;
-		} else {
-			target_position_q8 = position_q8;
-		}
-		controller_initialized = 1;
-	}
+	int64_t requested_target_q8;
 
 	if (command_age < MOTOR_COMMAND_TIMEOUT) {
 		command_age++;
@@ -108,18 +104,30 @@ void motor_update(void)
 		joystick_command = 0;
 	}
 
-	// Scale target motion for the 2 ms control period; full input moves
-	// about 2.5 encoder counts per update.
-	requested_target_q8 = target_position_q8 +
-		(int32_t)joystick_command * MOTOR_TARGET_STEP_Q8 / 1250;
-	if (requested_target_q8 > target_limit_q8) {
-		target_position_q8 = target_limit_q8;
-		integral_error = 0;
-	} else if (requested_target_q8 < -target_limit_q8) {
-		target_position_q8 = -target_limit_q8;
-		integral_error = 0;
-	} else {
-		target_position_q8 = requested_target_q8;
+	switch (MOTOR_CONTROL_MODE) {
+	case MOTOR_MODE_INCREMENTAL:
+		requested_target_q8 = target_position_q8 -
+			(int32_t)joystick_command * MOTOR_TARGET_STEP_Q8 / 1250;
+		if (requested_target_q8 > target_max_q8) {
+			target_position_q8 = target_max_q8;
+			integral_error = 0;
+		} else if (requested_target_q8 < target_min_q8) {
+			target_position_q8 = target_min_q8;
+			integral_error = 0;
+		} else {
+			target_position_q8 = requested_target_q8;
+		}
+		break;
+
+	case MOTOR_MODE_DIRECT:
+		if (joystick_command >= 0) {
+			target_position_q8 =
+				(int32_t)joystick_command * -target_max_q8 / MOTOR_COMMAND_LIMIT;
+		} else {
+			target_position_q8 =
+				(int32_t)joystick_command * target_min_q8 / MOTOR_COMMAND_LIMIT;
+		}
+		break;
 	}
 
 	error_q8 = target_position_q8 - position_q8;
@@ -131,18 +139,17 @@ void motor_update(void)
 		error = (int32_t)(error_q8 / 256);
 	}
 
-	// Keep the integral contribution independent of the 2 ms sample interval.
 	candidate_integral = clamp(integral_error + error,
 		-MOTOR_INTEGRAL_LIMIT, MOTOR_INTEGRAL_LIMIT);
-	output = 2 * error + candidate_integral / 500;
+	output = error + candidate_integral / 500;
 	if ((output <= MOTOR_COMMAND_LIMIT && output >= -MOTOR_COMMAND_LIMIT) ||
 		(output > MOTOR_COMMAND_LIMIT && error < 0) ||
 		(output < -MOTOR_COMMAND_LIMIT && error > 0)) {
 		integral_error = candidate_integral;
 	}
 
-	output = 2 * error + integral_error / 500;
+	output = error + integral_error / 500;
 	output = clamp(output, -MOTOR_COMMAND_LIMIT, MOTOR_COMMAND_LIMIT);
-	// The observed motor/encoder polarity is opposite to the controller sign.
+
 	motor_apply((int8_t)output);
 }

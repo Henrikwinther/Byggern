@@ -46,6 +46,11 @@ void can_send_message(can_message_t *msg) {
     mcp2515_request_to_send();
 }
 
+uint8_t can_check_rx(void)
+{
+	return (mcp2515_read(0x2C) & 0x01) != 0;
+}
+
 can_message_t can_receive_message(void)
 {
 

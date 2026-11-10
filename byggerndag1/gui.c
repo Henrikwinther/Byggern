@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <util/delay.h>
 
+uint8_t game_started = 0;
+
 static const char *root_items[] = {
 	"Start", "Settings", "Difficulty", "Exit"
 };
@@ -117,6 +119,7 @@ void gui_handle_selection(gui_state *gui, int8_t selected)
 	if (gui->menu == &root_menu) {
 		switch (selected) {
 			case 0:
+			game_started = 1;
 			gui_enter_menu(gui, &score_menu);
 			break;
 			case 1:

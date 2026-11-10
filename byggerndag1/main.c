@@ -41,14 +41,21 @@ int main(void)
 	
  	can_init();
 	
-	
+	can_message_t score_msg = {0};
 
 	while (1) {
 		
- 		
+ 		if (game_started){
 		 can_send_joystick_position(joystick_center);
+		 }
 
-		_delay_ms(10);
+		_delay_ms(1);
+
+		if (can_check_rx()) {
+			score_msg = can_receive_message();
+			gui_set_score(&gui, score_msg.data[0]);
+			printf("%d \n \r",score_msg.data[0]);
+		}
 
 		int8_t selected;
 

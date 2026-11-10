@@ -12,6 +12,8 @@
 #include <stdint.h>
 #include "adc.h"
 
+extern uint8_t game_started;
+
 typedef struct GuiMenu GuiMenu;
 
 struct GuiMenu {

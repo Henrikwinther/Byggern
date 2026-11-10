@@ -40,14 +40,16 @@ int main()
 	init_encoder();
 	can_init(0);
 	init_interrupt();
-	
 
-    printf("Hello World\r\n");
-	
 	uint8_t previous_score = 0;
 	int32_t previous_encoder_position = encoder_position();
 	
 	uint8_t ignore_first_score = 1;
+	
+	CanMsg score_msg = {0};
+	score_msg.length = 1;
+	score_msg.id = 10;
+	score_msg.byte[0] = 0;
 	
     while (1)
     {
@@ -56,7 +58,7 @@ int main()
 // 			previous_encoder_position = position;
 // 			printf("Encoder position : %ld\r\n", (long)position);
 // 		}
-
+		
         if (score != previous_score) {
 			if (ignore_first_score) {
 				score = 0;
@@ -64,6 +66,8 @@ int main()
 				ignore_first_score = 0;
 			} else {
 				previous_score = score;
+				score_msg.byte[0] = previous_score;
+				can_tx(score_msg);
 				printf("Score : %u\r\n", (unsigned int)previous_score);
 			}
 		}

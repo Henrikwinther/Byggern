@@ -60,7 +60,7 @@ void init_interrupt(void)
 	TC0->TC_CHANNEL[0].TC_RC = 52500;
 	TC0->TC_CHANNEL[0].TC_IER = TC_IER_CPCS;
 
-	// TC3 (TC1 channel 0): ~2 ms position-control update.
+	// TC3 (TC1 channel 0): ~0.4 ms position-control update.
 	TC1->TC_CHANNEL[0].TC_CMR =
 	(2u << 0)  |  // TCCLKS = MCK/32
 	(2u << 13) |  // WAVSEL = UP_RC
@@ -103,12 +103,15 @@ void TC3_Handler(void)
 			motor_set((int8_t)msg.byte[0]);
 			pending_servo_command = (int8_t)msg.byte[1];
 			
-			if (msg.byte[2] || msg.byte[3]) {
+			if (msg.byte[3]) {
 				PIOB->PIO_CODR = BUTTON_OUTPUT_PIN;
 				
 			} else {
 				PIOB->PIO_SODR = BUTTON_OUTPUT_PIN;
 			}
+			if (msg.byte[2]){
+				score = 0;
+			} 
 		
 	}
 	motor_update();

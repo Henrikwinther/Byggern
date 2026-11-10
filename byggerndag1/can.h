@@ -19,6 +19,7 @@ typedef struct {
 
 void can_init(void);
 void can_send_message(can_message_t *msg);
+uint8_t can_check_rx(void);
 can_message_t can_receive_message(void);
 void can_send_joystick_position(pos_t joystick_center);
 
