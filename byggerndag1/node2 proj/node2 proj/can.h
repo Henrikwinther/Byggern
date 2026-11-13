@@ -6,6 +6,7 @@
 // Struct with bit timing information
 // See `can_init` for usage example
 typedef struct CanInit CanInit;
+/* Bit-field view of the CAN timing register settings. */
 __attribute__((packed)) struct CanInit {
     union {
         struct {
@@ -39,6 +40,7 @@ void can_init(uint8_t rxInterrupt);
 
 // Dummy type for use with `union_cast`, see below
 typedef struct Byte8 Byte8;
+/* Byte-array view used when building a message payload from another type. */
 struct Byte8 {
     uint8_t bytes[8];
 };
@@ -70,6 +72,7 @@ struct Byte8 {
 //    can_printmsg(m);
 //    // Should print: CanMsg(id:1, length:7, data:{10, 0, 20, 0, 0, 240, 193})
 typedef struct CanMsg CanMsg;
+/* CAN identifier, payload length, and interchangeable payload views. */
 struct CanMsg {
     uint8_t id;
     uint8_t length;
@@ -83,6 +86,7 @@ struct CanMsg {
 // Send a CAN message on the bus. 
 // Blocks if the bus does not receive the message (typically because one of the 
 // receiving nodes has not cleared a buffer)
+/* CAN message transmit and non-blocking receive operations. */
 void can_tx(CanMsg m);
 
 // Receive a CAN message.

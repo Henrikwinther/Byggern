@@ -13,11 +13,13 @@
 #define SERVO_MAX_US     2099u
 #define PWM_PERIOD_TICKS 52500u
 
+/* Convert a pulse duration in microseconds to PWM timer ticks. */
 static uint32_t us_to_ticks(uint32_t us)
 {
 	return (us * 2625u) / 1000u;
 }
 
+/* Configure the PWM peripheral and initial servo pulse width. */
 void init_pwm(void)
 {
 	// Enable PIOB and PWM clocks.
@@ -34,11 +36,13 @@ void init_pwm(void)
 	PWM->PWM_CH_NUM[1].PWM_CDTY = us_to_ticks(1500u);
 }
 
+/* Enable the PWM channel after its settings have been initialized. */
 void start_pwm(void)
 {
 	PWM->PWM_ENA = PWM_ENA_CHID1;
 }
 
+/* Clamp and apply a new servo pulse width. */
 void set_pwm_pulse(uint32_t pulse_us)
 {
 	if (pulse_us < SERVO_MIN_US) pulse_us = SERVO_MIN_US;

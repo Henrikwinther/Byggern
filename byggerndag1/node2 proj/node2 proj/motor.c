@@ -24,6 +24,7 @@ static int64_t target_position_q8;
 static int32_t integral_error;
 static uint8_t command_age;
 
+/* Keep a value within the inclusive control range. */
 static int32_t clamp(int32_t value, int32_t minimum, int32_t maximum)
 {
 	if (value < minimum) return minimum;
@@ -31,6 +32,7 @@ static int32_t clamp(int32_t value, int32_t minimum, int32_t maximum)
 	return value;
 }
 
+/* Set motor direction and convert command magnitude into a PWM duty value. */
 static void motor_apply(int8_t command)
 {
 	int16_t signed_command = command;
@@ -49,6 +51,7 @@ static void motor_apply(int8_t command)
 		(100u * 100u);
 }
 
+/* Enable the motor peripherals and set their initial control state. */
 void motor_init(void)
 {
 	// Enable PIOB, PIOC, and PWM peripheral clocks.
@@ -76,6 +79,7 @@ void motor_init(void)
 	command_age = MOTOR_COMMAND_TIMEOUT;
 }
 
+/* Filter small joystick changes and save a bounded command. */
 void motor_set(int8_t command)
 {
 	if (command > -8 && command < 8) {
@@ -86,6 +90,7 @@ void motor_set(int8_t command)
 	command_age = 0;
 }
 
+/* Update the position controller and apply its bounded output to the motor. */
 void motor_update(void)
 {
 	int32_t position = encoder_position();
@@ -98,12 +103,14 @@ void motor_update(void)
 	int32_t output;
 	int64_t requested_target_q8;
 
+	/* Stop using stale joystick input after the command timeout. */
 	if (command_age < MOTOR_COMMAND_TIMEOUT) {
 		command_age++;
 	} else {
 		joystick_command = 0;
 	}
 
+	/* Convert joystick input to a bounded position target in the selected mode. */
 	switch (MOTOR_CONTROL_MODE) {
 	case MOTOR_MODE_INCREMENTAL:
 		requested_target_q8 = target_position_q8 -
@@ -130,6 +137,7 @@ void motor_update(void)
 		break;
 	}
 
+	/* Compute and limit position error before applying integral correction. */
 	error_q8 = target_position_q8 - position_q8;
 	if (error_q8 > (int64_t)MOTOR_ERROR_LIMIT * 256) {
 		error = MOTOR_ERROR_LIMIT;
@@ -139,6 +147,7 @@ void motor_update(void)
 		error = (int32_t)(error_q8 / 256);
 	}
 
+	/* Avoid integral windup when the output is saturated. */
 	candidate_integral = clamp(integral_error + error,
 		-MOTOR_INTEGRAL_LIMIT, MOTOR_INTEGRAL_LIMIT);
 	output = error + candidate_integral / 500;

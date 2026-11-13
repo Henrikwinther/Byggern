@@ -8,8 +8,10 @@
 #endif // F_CPU
 
 
+/* Select the timer compare value that best matches the requested ADC clock. */
 float adc_clock_init(float f_mhz)
 {
+    /* Reject requests outside the ADC's supported clock range. */
     if (f_mhz < ADC_CLOCK_MIN_MHZ || f_mhz > ADC_CLOCK_MAX_MHZ) {
         return 0.0f; /* outside what the MAX156 tolerates */
     }
@@ -23,6 +25,7 @@ float adc_clock_init(float f_mhz)
     uint16_t best_ocr = 0;
     float best_err = -1.0f;
  
+    /* Search every legal compare value and keep the closest frequency. */
     for (uint16_t ocr = 0;; ocr++) {
         float f = (float)F_CPU / (2.0f * (float)(ocr + 1)) / 1e6f;
         if (f < ADC_CLOCK_MIN_MHZ) {
@@ -36,6 +39,7 @@ float adc_clock_init(float f_mhz)
         }
     }
  
+    /* Set the output pin and start Timer1 in CTC toggle mode. */
     DDRD |= (1 << PD5); /* OC1A must be an output for the toggle
                            to appear on the pin */
  

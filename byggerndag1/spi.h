@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 
+/* SPI peripherals connected to the AVR master. */
 typedef enum {
 	IO_BOARD_MCU = 0,
 	OLED_DISPLAY,
@@ -19,6 +20,7 @@ typedef enum {
 } spi_slave_t;
 
 
+/* SPI setup, peripheral selection, and byte transfer functions. */
 void spi_init(void);
 void spi_select(spi_slave_t slave);
 void spi_deselect(void);

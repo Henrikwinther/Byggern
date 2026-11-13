@@ -14,6 +14,7 @@
 #define BAUD 9600UL
 #define MYUBRR F_CPU/16/BAUD-1
 
+/* Configure the baud rate, frame format, and receive interrupt. */
 void USART_Init(unsigned int ubrr)
 {
 	/* Set baud rate */
@@ -31,6 +32,7 @@ void USART_Init(unsigned int ubrr)
 
 }
 
+/* Wait until the transmit register is ready, then send one byte. */
 int USART_Transmit(unsigned char data)
 {
 	/* Wait for empty transmit buffer */
@@ -42,6 +44,7 @@ int USART_Transmit(unsigned char data)
 	return 0;
 }
 
+/* Wait for and return the next received byte. */
 int USART_Receive(void)
 {
 	/* Wait for data to be received */
@@ -52,6 +55,7 @@ int USART_Receive(void)
 	return UDR0;
 }
 
+/* Receive interrupt handler that reads the incoming byte. */
 ISR(USART0_RXC_vect)
 {
 	

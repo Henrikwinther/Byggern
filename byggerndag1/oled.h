@@ -12,6 +12,7 @@
 #include <avr/io.h>
 
 
+/* OLED setup, positioning, clearing, and character output functions. */
 void oled_init(void);
 void oled_write_data (uint8_t data);
 void oled_write_command (uint8_t command);

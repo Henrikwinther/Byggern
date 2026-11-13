@@ -8,6 +8,7 @@
 
 uint8_t game_started = 0;
 
+/* Text labels for each menu shown on the OLED. */
 static const char *root_items[] = {
 	"Start", "Settings", "Difficulty", "Exit"
 };
@@ -24,6 +25,7 @@ static const char *luminosity_items[] = {
 	"Use the joystick", "Back"
 };
 
+/* Menu descriptors link each submenu to its parent for Back navigation. */
 static const GuiMenu score_menu = {
 	0, 0, 0
 };
@@ -46,6 +48,7 @@ const GuiMenu luminosity_menu = {
 
 static void draw_score(const gui_state *gui)
 {
+	/* Convert the score to digits in reverse order, then display them. */
 	char digits[5];
 	uint8_t digit_count = 0;
 	uint16_t score = gui->score;
@@ -69,12 +72,14 @@ static void draw_menu(const gui_state *gui)
 {
 	oled_clear();
 
+	/* The score screen is rendered separately from selectable menu items. */
 	if (gui->menu == &score_menu) {
 		draw_score(gui);
 		return;
 	}
 
 	for (uint8_t i = 0; i < gui->menu->item_count; i++) {
+		/* Draw each item and mark the currently selected position. */
 		oled_go_to_line(7 - i);
 		oled_go_to_column(42);
 		if (i == gui->position) {
@@ -88,6 +93,7 @@ static void draw_menu(const gui_state *gui)
 	
 }
 
+/* Set the initial menu state and draw it. */
 void gui_init(gui_state *gui, const GuiMenu *menu)
 {
 	gui->menu = menu;
@@ -98,6 +104,7 @@ void gui_init(gui_state *gui, const GuiMenu *menu)
 	draw_menu(gui);
 }
 
+/* Switch menus and reset navigation to the first item. */
 void gui_enter_menu(gui_state *gui, const GuiMenu *menu)
 {
 	gui->menu = menu;
@@ -106,6 +113,7 @@ void gui_enter_menu(gui_state *gui, const GuiMenu *menu)
 	draw_menu(gui);
 }
 
+/* Store the latest score and refresh it when the score screen is active. */
 void gui_set_score(gui_state *gui, uint16_t score)
 {
 	gui->score = score;
@@ -114,6 +122,7 @@ void gui_set_score(gui_state *gui, uint16_t score)
 	}
 }
 
+/* Apply the selected menu action or return to the parent menu. */
 void gui_handle_selection(gui_state *gui, int8_t selected)
 {
 	if (gui->menu == &root_menu) {
@@ -140,12 +149,14 @@ void gui_handle_selection(gui_state *gui, int8_t selected)
 }
 
 
+/* Update navigation and return a selection only on a new button press. */
 int8_t gui_update(gui_state *gui, pos_t joystick_center)
 {
 	JoystickDirection direction = joystick_direction(joystick_center);
 	int8_t selected = -1;
 	uint8_t pressed = joystick_pressed() != 0;
 
+	/* Move one item per direction change and keep the selection in range. */
 	if (direction != gui->last_direction) {
 		if (direction == UP &&gui->position > 0) {
 			gui->position--;
@@ -160,6 +171,7 @@ int8_t gui_update(gui_state *gui, pos_t joystick_center)
 
 	gui->last_direction = direction;
 
+	/* Report only the transition from released to pressed. */
 	if (pressed && !gui->button_was_pressed) {
 		selected = (int8_t)gui->position;
 	}
@@ -172,6 +184,7 @@ int8_t gui_update(gui_state *gui, pos_t joystick_center)
 	return selected;
 }
 
+/* Read the navigation button through the SPI-connected I/O board. */
 uint8_t joystick_pressed(void)
 {
 	uint8_t button;
@@ -190,6 +203,7 @@ uint8_t joystick_pressed(void)
 	return button;
 }
 
+/* Read button states and normalize the unused left-button value. */
 Buttons buttons_read(void)
 {
 	Buttons buttons;

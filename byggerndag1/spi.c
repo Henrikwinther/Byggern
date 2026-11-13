@@ -10,6 +10,7 @@
 #include <util/delay.h>
 #include "spi.h"
 
+/* Configure SPI pins and enable the AVR as the bus master. */
 void spi_init(void)
 {
 	
@@ -30,6 +31,7 @@ void spi_init(void)
 	
 }
 
+/* Assert the chip-select line for the requested SPI peripheral. */
 void spi_select(spi_slave_t slave){
 	
 	if (slave == 0) {
@@ -46,12 +48,14 @@ void spi_select(spi_slave_t slave){
 }
 
 
+/* Deassert all configured chip-select lines. */
 void spi_deselect(void) {
 	PORTB |= (1 << PB4);
 	PORTB |= (1 << PB3);
 	PORTB |= (1 << PB1);
 }
 
+/* Send one byte and wait for the transfer to finish. */
 void spi_write(uint8_t data)
 {
 	/* Start transmission */
@@ -63,6 +67,7 @@ void spi_write(uint8_t data)
 	(void)SPDR;
 }
 
+/* Clock in one byte by sending a dummy value. */
 uint8_t spi_read(void) {
 	
 	SPDR = 0x77; // send dummy data

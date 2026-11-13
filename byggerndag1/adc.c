@@ -14,6 +14,7 @@
 #define ADC_BASE_ADDRESS 0x1000
 #define THRESHOLD 50
 
+/* Configure Timer1 output as the ADC conversion clock. */
 void init_adc(void){
 
     DDRD |= (1 << PD5); // set PD5 to output
@@ -37,6 +38,7 @@ void init_adc(void){
     
 }
 
+/* Start a conversion and return the requested ADC channel value. */
 uint8_t read_channel(uint8_t channel){
    
     volatile char *adc = (char *) ADC_BASE_ADDRESS;
@@ -57,6 +59,8 @@ uint8_t read_channel(uint8_t channel){
 
 }
 
+
+/* Average joystick readings after allowing the input to settle. */
 pos_t pos_calibrate(void){
     
     pos_t calibrated_pos = {0,0};
@@ -79,6 +83,7 @@ pos_t pos_calibrate(void){
 }
 
 
+/* Read joystick axes relative to the calibrated center and scale them. */
 pos_t pos_read(pos_t joystick_center)
 {
 	pos_t pos;
@@ -106,6 +111,7 @@ pos_t pos_read(pos_t joystick_center)
 }
 
 
+/* Convert the scaled joystick position into a cardinal direction. */
 JoystickDirection joystick_direction(pos_t joystick_center){
 	
 	pos_t pos = pos_read(joystick_center);

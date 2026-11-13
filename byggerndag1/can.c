@@ -17,6 +17,7 @@
 #include "gui.h"
 
 
+/* Reset the controller and configure its bit timing and normal mode. */
 void can_init(void)
 {
     mcp2515_reset();
@@ -32,6 +33,7 @@ void can_init(void)
 		
 }
 
+/* Load a standard identifier and payload into the transmit buffer. */
 void can_send_message(can_message_t *msg) {
 
     mcp2515_write(0x31, ((msg->id) >> 3) & 0xFF );
@@ -46,11 +48,13 @@ void can_send_message(can_message_t *msg) {
     mcp2515_request_to_send();
 }
 
+/* Report whether the first receive buffer contains a message. */
 uint8_t can_check_rx(void)
 {
 	return (mcp2515_read(0x2C) & 0x01) != 0;
 }
 
+/* Decode the identifier, length, and payload from the receive buffer. */
 can_message_t can_receive_message(void)
 {
 
@@ -79,6 +83,7 @@ can_message_t can_receive_message(void)
     
 }
 
+/* Read, normalize, and transmit joystick coordinates and button states. */
 void can_send_joystick_position(pos_t joystick_center) {
 	
 	can_message_t msg;

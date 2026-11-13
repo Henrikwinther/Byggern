@@ -6,6 +6,7 @@
 
 volatile uint8_t score = 0;
 
+/* Enable the ADC clock and configure continuous conversion on channel 0. */
 void init_adc(void)
 {
     // enable clock
@@ -25,14 +26,17 @@ void init_adc(void)
     ADC->ADC_CHER = 1 << 0;
 }
 
+/* Return the most recent 12-bit conversion result. */
 uint16_t adc_read(void)
 {
     return (ADC->ADC_CDR[0] & 0x0FFF);
 }
 
 
+/* Average sensor samples and increment score on a stable blocked transition. */
 void set_score(void)
 {
+    /* Average several conversions to reduce noise before thresholding. */
     uint32_t sum = 0;
 
     for (uint8_t i = 0; i < 8; i++) {
@@ -48,6 +52,7 @@ void set_score(void)
     static bool initialized = false;
     static uint8_t candidate_count = 0;
 
+    /* Require four consistent readings before accepting a state change. */
     if (blocked != candidate_blocked) {
 	    candidate_blocked = blocked;
 	    candidate_count = 1;

@@ -21,6 +21,7 @@
 
 int main()
 {
+    /* Initialize the MCU and set up UART, input, motor, timers, and CAN. */
     SystemInit();
 
     WDT->WDT_MR = WDT_MR_WDDIS; //Disable Watchdog Timer
@@ -44,6 +45,7 @@ int main()
 	uint8_t previous_score = 0;
 	int32_t previous_encoder_position = encoder_position();
 	
+	/* Ignore the first sensor transition and prepare one-byte score messages. */
 	uint8_t ignore_first_score = 1;
 	
 	CanMsg score_msg = {0};
@@ -51,6 +53,7 @@ int main()
 	score_msg.id = 10;
 	score_msg.byte[0] = 0;
 	
+    /* Send a CAN update only when the score changes. */
     while (1)
     {
 // 		int32_t position = encoder_position();
@@ -60,6 +63,7 @@ int main()
 // 		}
 		
         if (score != previous_score) {
+			/* Discard the initial reading, then report subsequent score changes. */
 			if (ignore_first_score) {
 				score = 0;
 				previous_score = 0;

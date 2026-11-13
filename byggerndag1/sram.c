@@ -13,22 +13,26 @@
 #define BASE_ADDRESS 0x1800
 
 
+/* Enable the AVR external memory interface for SRAM access. */
 void xmem_init(void){
 	MCUCR |= (1 << SRE); // enable XMEM
 	SFIOR |= (1 << XMM2); // maski bits/reduce bus width
 }
 
+/* Write one byte at an offset from the external-memory base address. */
 void xmem_write ( uint8_t data , uint16_t addr ) {
 	volatile char * ext_mem = ( char *) BASE_ADDRESS ;
 	ext_mem [ addr ]= data ;
 }
 
+/* Read one byte at an offset from the external-memory base address. */
 uint8_t xmem_read ( uint16_t addr ) {
 	volatile char * ext_mem = ( char *) BASE_ADDRESS ;
 	uint8_t ret_val = ext_mem [ addr ];
 	return ret_val;
 }
 
+/* Check SRAM writes immediately, then verify the stored pattern again. */
 void SRAM_test(void)
 {
 	volatile char *ext_ram = (char *)0x1800; // Start address for the SRAM

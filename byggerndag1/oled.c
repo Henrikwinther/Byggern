@@ -12,6 +12,7 @@
 #include "oled.h"
 #include "fonts.h"
 
+/* Configure the OLED display and clear its screen. */
 void oled_init(void)
 {
 	oled_write_command(0xAF);
@@ -20,6 +21,7 @@ void oled_init(void)
 	oled_clear();
 }
 
+/* Send a command byte with the display's data/command line cleared. */
 void oled_write_command (uint8_t command) {
 	
 	PORTB &= ~(1 << PD2);
@@ -28,6 +30,7 @@ void oled_write_command (uint8_t command) {
 	spi_deselect();
 }
 
+/* Send a data byte with the display's data/command line set. */
 void oled_write_data (uint8_t data) {
 	
 	PORTB |= (1 << PD2);
@@ -39,12 +42,14 @@ void oled_write_data (uint8_t data) {
 
 
 
+/* Select one of the display's eight text pages. */
 void oled_go_to_line(uint8_t line) {
 	if ( line >= 0 && line < 8){
 		oled_write_command(0xB0 + line);
 	}
 }
 
+/* Set the display column using its low and high address commands. */
 void oled_go_to_column (uint8_t col) {
 	
 	if ( col >= 0 && col < 128) {
@@ -54,6 +59,7 @@ void oled_go_to_column (uint8_t col) {
 }
 
 
+/* Fill every display page with zero-valued pixels. */
 void oled_clear(void) {
 	for (uint8_t j = 0; j < 8; j++) {
 		oled_go_to_line(j);
@@ -65,6 +71,7 @@ void oled_clear(void) {
 	}
 }
 
+/* Reverse bit order so glyph columns match the display orientation. */
 uint8_t reverse_bits(uint8_t x)
 {
 	x = ((x & 0x55) << 1) | ((x & 0xAA) >> 1);
@@ -73,6 +80,7 @@ uint8_t reverse_bits(uint8_t x)
 	return x;
 }
 
+/* Look up and write one printable character from the small font table. */
 void oled_write_char(char c)
 {
 	if (c < 32 || c > 126) {
@@ -88,6 +96,7 @@ void oled_write_char(char c)
 }
 
 
+/* Write a null-terminated string one character at a time. */
 void oled_printf(const char *str) {
 	while (*str){
 		oled_write_char(*str);

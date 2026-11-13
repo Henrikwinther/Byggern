@@ -10,6 +10,7 @@
 
 #define SERVO_CENTER_US 1500
 
+/* Convert a signed command to a pulse offset from the servo center. */
 void servo_set(int8_t command)
 {
 	int32_t pulse = SERVO_CENTER_US + (int32_t)command * 6;

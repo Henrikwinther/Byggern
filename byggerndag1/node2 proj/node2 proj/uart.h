@@ -11,6 +11,7 @@
 
 
 // Initialize. Hooks stdio functions (like `printf`)
+// Set the CPU frequency and desired serial baud rate.
 void uart_init(uint32_t cpufreq, uint32_t baudrate);
 
 // Send a single character

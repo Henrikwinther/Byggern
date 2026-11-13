@@ -11,6 +11,7 @@
 uint64_t time_now(void);
 
 // Convert standard wall time units to ticks
+// Each argument is a duration expressed in the named unit.
 uint64_t usecs(uint64_t s);
 uint64_t msecs(uint64_t s);
 uint64_t seconds(uint64_t s);
@@ -41,6 +42,7 @@ void time_spinUntil(uint64_t then);
     for(uint64_t then = time_now() + (period); 1; then += (period), time_spinUntil(then))
 
 // Human-readable time
+// The fields store the corresponding components of a duration.
 typedef struct Time Time;
 struct Time {
     uint16_t ticks;

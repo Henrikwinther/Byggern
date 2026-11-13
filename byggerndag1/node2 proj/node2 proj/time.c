@@ -7,6 +7,7 @@
 uint64_t calib;
 static uint64_t now = 0;
     
+/* Calibrate SysTick and enable its periodic interrupt. */
 __attribute__((constructor)) void time_init(void){
     // Clock calibration is set to '(num cycles for 1ms) / 8'
     // (SysTick is by default set to use 8x clock divisor)
@@ -24,16 +25,19 @@ __attribute__((constructor)) void time_init(void){
 }    
 
 
+/* Accumulate one calibrated tick interval each time SysTick fires. */
 void SysTick_Handler(void){
     now += calib;
 }
 
 
+/* Combine completed millisecond intervals with the current counter value. */
 uint64_t time_now(void){
     return now + calib - SysTick->VAL;
 }
 
 
+/* Convert durations from standard units into calibrated timer ticks. */
 uint64_t usecs(uint64_t s){
     return s*calib/1000;
 }
@@ -66,6 +70,8 @@ float totalHours(uint64_t t){
     return t / (1.0 * calib * 1000 * 60 * 60);
 }
 
+/* Split a tick count into hour, minute, second, millisecond, and tick fields. */
+/* Convert calibrated timer ticks back into standard wall-time units. */
 Time time_split(uint64_t t){
     Time r;
     uint64_t d;
@@ -87,12 +93,14 @@ Time time_split(uint64_t t){
     return r;
 }
 
+/* Combine the fields of a Time value into one tick count. */
 uint64_t time_combine(Time t){
     uint64_t a = 0;
     a += t.ticks + msecs(t.msecs) + seconds(t.seconds) + minutes(t.minutes) + hours(t.hours);
     return a;
 }     
 
+/* Busy-wait for a duration or until an absolute time is reached. */
 void time_spinFor(uint64_t duration){
     time_spinUntil(time_now() + duration);
 }    
@@ -101,6 +109,7 @@ void time_spinUntil(uint64_t then){
     while(then > time_now()){}        
 }    
 
+/* Return the calibrated number of ticks per millisecond. */
 uint64_t ticksPerMs(void){
     return calib;
 }

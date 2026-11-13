@@ -3,6 +3,7 @@
 #include "can.h"
 #include <stdio.h>
 
+/* Print a CAN message identifier, length, and each payload byte. */
 void can_printmsg(CanMsg m){
     printf("CanMsg(id:%d, length:%d, data:{", m.id, m.length);
     if(m.length){
@@ -19,6 +20,7 @@ void can_printmsg(CanMsg m){
 #define rxMailbox 1
 
 
+/* Configure CAN pins, clock, bit timing, mailboxes, and optional RX interrupt. */
 void can_init(uint8_t rxInterrupt){
     // Disable CAN
     CAN0->CAN_MR &= ~CAN_MR_CANEN; 
@@ -70,6 +72,7 @@ void can_init(uint8_t rxInterrupt){
 }
 
 
+/* Wait for the transmit mailbox, load a message, and request transmission. */
 void can_tx(CanMsg m){
     while(!(CAN0->CAN_MB[txMailbox].CAN_MSR & CAN_MSR_MRDY)){}
     
@@ -87,6 +90,7 @@ void can_tx(CanMsg m){
     CAN0->CAN_MB[txMailbox].CAN_MCR = (m.length << CAN_MCR_MDLC_Pos) | CAN_MCR_MTCR;
 }
 
+/* Return a received message when available, without waiting for one. */
 uint8_t can_rx(CanMsg* m){
     if(!(CAN0->CAN_MB[rxMailbox].CAN_MSR & CAN_MSR_MRDY)){
         return 0;

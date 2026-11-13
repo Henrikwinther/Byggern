@@ -17,6 +17,7 @@
 
 static volatile int8_t pending_servo_command;
 
+/* Configure TC2 channel 0 as a quadrature encoder position counter. */
 void init_encoder(void)
 {
 	// Enable PIOC and TC2 channel 0 (peripheral ID_TC6) clocks.
@@ -35,11 +36,13 @@ void init_encoder(void)
 	TC2->TC_CHANNEL[0].TC_CCR = TC_CCR_CLKEN | TC_CCR_SWTRG;
 }
 
+/* Return the current signed encoder count. */
 int32_t encoder_position(void)
 {
 	return (int32_t)TC2->TC_CHANNEL[0].TC_CV;
 }
 
+/* Configure periodic timers for servo updates, motor control, and scoring. */
 void init_interrupt(void)
 {
 	// Activate clocks for PIOA, TC0 channel 0, TC3, and TC4.
@@ -88,12 +91,14 @@ void init_interrupt(void)
 	TC1->TC_CHANNEL[1].TC_CCR = TC_CCR_CLKEN | TC_CCR_SWTRG;
 }
 
+/* Clear the servo timer interrupt and apply the pending command. */
 void TC0_Handler(void)
 {
 	(void)TC0->TC_CHANNEL[0].TC_SR;
 	servo_set(pending_servo_command);
 }
 
+/* Consume a received control message and update motor and button outputs. */
 void TC3_Handler(void)
 {
 	CanMsg msg;
@@ -117,6 +122,7 @@ void TC3_Handler(void)
 	motor_update();
 }
 
+/* Clear the score timer interrupt and update the sensor score. */
 void TC4_Handler(void)
 {
 	(void)TC1->TC_CHANNEL[1].TC_SR;

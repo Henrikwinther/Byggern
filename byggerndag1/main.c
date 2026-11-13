@@ -21,6 +21,7 @@
 
 int main(void)
 {
+	/* Enable interrupts and initialize serial, memory, input, display, and CAN. */
 	sei();
 	
 	
@@ -43,14 +44,17 @@ int main(void)
 	
 	can_message_t score_msg = {0};
 
+	/* Keep the display responsive while exchanging joystick and score messages. */
 	while (1) {
 		
+		/* Send joystick updates after the user starts the game. */
  		if (game_started){
 		 can_send_joystick_position(joystick_center);
 		 }
 
 		_delay_ms(1);
 
+		/* Refresh the score when a CAN message arrives. */
 		if (can_check_rx()) {
 			score_msg = can_receive_message();
 			gui_set_score(&gui, score_msg.data[0]);
@@ -59,6 +63,7 @@ int main(void)
 
 		int8_t selected;
 
+		/* Handle menu actions only when a new selection is reported. */
 		selected = gui_update(&gui, joystick_center);
 		if (selected < 0) {
 			continue;

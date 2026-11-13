@@ -2,12 +2,11 @@
 #define TIMER1_H
 
 
-/*Klokke limits i Mhz*/
+/* Allowed ADC clock frequency range in megahertz. */
 #define ADC_CLOCK_MIN_MHZ 0.5f
 #define ADC_CLOCK_MAX_MHZ 5.0f
 
-/*Returnerer den sanne klokke frekvensen som er satt
-på Timer1. */
+/* Configure Timer1 and return the actual clock frequency in MHz. */
 float adc_clock_init(float f_mhz);
 
 #endif

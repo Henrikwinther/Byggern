@@ -12,11 +12,13 @@
 #include <stdint.h>
 
 
+/* Two-axis joystick coordinates. */
 typedef struct {
     int16_t x;
     int16_t y;
 } pos_t;
 
+/* Direction inferred from the joystick position. */
 typedef enum {
 	LEFT,
 	RIGHT,
@@ -25,6 +27,7 @@ typedef enum {
 	NEUTRAL 
 	}JoystickDirection;
 
+/* ADC setup, channel reads, joystick calibration, and input interpretation. */
 void init_adc(void);
 uint8_t read_channel(uint8_t channel);
 pos_t pos_calibrate(void);

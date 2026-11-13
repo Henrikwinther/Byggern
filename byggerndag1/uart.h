@@ -9,6 +9,7 @@
 #ifndef UART_H_
 #define UART_H_
 
+/* Initialize the UART and provide blocking byte-level input/output. */
 void USART_Init(unsigned int ubrr);
 int USART_Transmit(unsigned char data);
 int USART_Receive(void);

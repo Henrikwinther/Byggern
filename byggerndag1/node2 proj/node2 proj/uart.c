@@ -15,6 +15,7 @@ struct RingBuf {
 RingBuf ringBuf = {0};
 
 
+/* Add a byte to the ring buffer unless it is full. */
 int push(RingBuf* rb, uint8_t val){
     if(rb->length >= (sizeof(rb->buffer)/sizeof(rb->buffer[0]))){
         return 0;
@@ -25,6 +26,7 @@ int push(RingBuf* rb, uint8_t val){
     return 1;
 }
 
+/* Remove the next byte from the ring buffer when one is available. */
 int pop(RingBuf* rb, uint8_t* val){    
     if(!rb->length){
         return 0;
@@ -35,6 +37,7 @@ int pop(RingBuf* rb, uint8_t* val){
     return 1;
 }
 
+/* Configure UART pins, baud rate, receive interrupts, and NVIC routing. */
 void uart_init(uint32_t cpufreq, uint32_t baudrate){
     PMC->PMC_PCER0 |= (1 << ID_UART);
     
@@ -58,15 +61,18 @@ void uart_init(uint32_t cpufreq, uint32_t baudrate){
     
 }    
 
+/* Wait until the UART can accept and transmit one byte. */
 void uart_tx(uint8_t val){
     while(!(UART->UART_SR & UART_SR_TXEMPTY)){}
     UART->UART_THR = val;
 }
 
+/* Try to read one byte from the receive ring buffer. */
 uint8_t uart_rx(uint8_t* val){
     return pop(&ringBuf, val);
 }    
 
+/* Copy buffered input into the caller's buffer without blocking. */
 int uart_flush(char* buf, int len){
     int r = 0;
     for(; r < len; r++){
@@ -79,6 +85,7 @@ int uart_flush(char* buf, int len){
 }
 
 
+/* Recover UART reception after errors and enqueue incoming bytes. */
 void UART_Handler(){
     
     uint32_t status = UART->UART_SR;
@@ -104,6 +111,7 @@ void UART_Handler(){
 extern int _end;
 #include <sys/stat.h>
 
+/* Provide the heap-growth hook required by the C library. */
 void *_sbrk(int incr){
     static unsigned char *heap = NULL;
     unsigned char *prev_heap;
@@ -118,6 +126,7 @@ void *_sbrk(int incr){
     return prev_heap;
 }
 
+/* Minimal system-call hooks used by the C library on this device. */
 int _close(int file){
     return -1;
 }

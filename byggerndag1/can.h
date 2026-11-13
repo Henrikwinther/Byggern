@@ -11,12 +11,14 @@
 #include <stdint.h>
 #include "adc.h"
 
+/* CAN identifier and payload data used by this application. */
 typedef struct {
     uint16_t id;
     uint8_t data[8];
     uint8_t length;
 } can_message_t;
 
+/* CAN controller setup, message transfer, and joystick reporting. */
 void can_init(void);
 void can_send_message(can_message_t *msg);
 uint8_t can_check_rx(void);

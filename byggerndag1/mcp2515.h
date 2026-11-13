@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 
+/* Low-level SPI commands for reading and controlling the MCP2515. */
 uint8_t mcp2515_read(uint8_t address);
 void mcp2515_write(uint8_t address, uint8_t data);
 void mcp2515_request_to_send(void);
